@@ -2,17 +2,15 @@
 # CMake Configuration for the Sortiva Project
 # ========================================================
 
-# Specify the minimum CMake version required
 cmake_minimum_required(VERSION 3.22)
 
-# Project name, languages, and version
 project(sortiva
-  LANGUAGES CXX
-  VERSION 1.0.0
+    LANGUAGES CXX
+    VERSION 1.0.0
 )
 
 # ========================================================
-# C++ Standard and General Settings
+# Global Settings
 # ========================================================
 
 set(CMAKE_CXX_STANDARD 20)                   # Use C++20
@@ -22,11 +20,11 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)        # Generate compile commands (useful
 set(USE_FOLDERS ON)                          # Organize targets into folders (for IDEs)
 set(BUILD_SHARED_LIBS OFF)                   # Build static libraries by default
 
-# =======================================================
+# ========================================================
 # Helper Functions: 
 # 	Puts Targets into a Folder
 #	Finds all files in a dir wich are defined file-types
-# =======================================================
+# ========================================================
 # This function puts targets into a specified folder.
 # It checks if the target exists and gets the actual target (if it is aliased).
 # It then sets the folder property for the target.
@@ -93,6 +91,17 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(sol2)
 
+# --- Add Lua
+FetchContent_Declare(
+    lua
+    GIT_REPOSITORY "https://github.com/marovira/lua"
+    GIT_TAG "5.4.4"
+)
+
+FetchContent_MakeAvailable(lua)
+
+set(LUA_BUILD_INTERPRETER ON)
+
 # ========================================================
 # Helper Function: Set Common Target Properties
 # ========================================================
@@ -101,8 +110,10 @@ FetchContent_MakeAvailable(sol2)
 
 function(set_common_properties target)
 	target_link_libraries(${target} PRIVATE sol2::sol2)  # Link with Sol2
+	target_compile_definitions(${target} PRIVATE SOL_ALL_SAFETIES_ON=1)
 	target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)  # Include project headers
 	target_sources(${target} PRIVATE ${SVA_COMMON_FILES})  # Include common files
+	target_link_libraries(${target} PRIVATE lua::lua)
 endfunction()
 
 # ========================================================
@@ -111,14 +122,11 @@ endfunction()
 
 set(GUI_TARGET_NAME "${PROJECT_NAME}")
 # --- Create GUI Executable
-  
-find_files(SVA_GUI_FILES "./src/gui/" hpp cpp h c hxx cxx)
+find_files(SVA_GUI_FILES "./src/" hpp cpp h c hxx cxx)
 add_executable(${GUI_TARGET_NAME}
-	src/main.cpp  # Entry point for the GUI application
-	src/sva.hpp  # Header file for the console
 	${SVA_GUI_FILES}
 )
-  
+
 # ---------------
 # RAYLIB
 # ---------------
@@ -200,21 +208,22 @@ if(${SVA_BUILD_TEST})
 	enable_testing()
 	
 	# --- Create Test Executable
+	set(TEST_TARGET_NAME "${GUI_TARGET_NAME}_test")
 	add_executable(
-		sortiva_test
+		${TEST_TARGET_NAME}
 		tests/test_main.cpp          # Test entry point
 		tests/test_sorting_functions.cpp
 	)
 	
 	target_link_libraries(
-		sortiva_test
+		${TEST_TARGET_NAME}
 		PRIVATE GTest::gtest_main    # Link Google Test framework
 	)
-	set_common_properties(sortiva_test)
+	set_common_properties(${TEST_TARGET_NAME})
 	
 	# --- Enable Google Test's test discovery feature
 	include(GoogleTest)
-	gtest_discover_tests(sortiva_test)
+	gtest_discover_tests(${TEST_TARGET_NAME})
 	
 	# put google test targets into a folder
 	put_targets_into_folder(
@@ -227,3 +236,28 @@ if(${SVA_BUILD_TEST})
 	)
 endif()
 
+# Option to create an includes target
+set(SVA_CREATE_INCLUDES_TARGET ON CACHE BOOL "Create an includes target")
+
+if(${SVA_CREATE_INCLUDES_TARGET})
+	set(INCLUDES_TARGET_NAME "${GUI_TARGET_NAME}_includes")
+	set(INCLUDE_FILES)
+	find_files(
+		INCLUDE_FILES
+		"include/"
+		hpp h hxx
+	)
+	message(STATUS "Include files: ${INCLUDE_FILES}")
+	add_custom_target(${INCLUDES_TARGET_NAME}
+		SOURCES
+		${INCLUDE_FILES}
+	)
+	set_target_properties(${INCLUDES_TARGET_NAME} PROPERTIES FOLDER "sva")
+endif()
+
+put_targets_into_folder(
+	FOLDER "sva"
+	TARGETS
+	${GUI_TARGET_NAME}
+	${TEST_TARGET_NAME}
+)

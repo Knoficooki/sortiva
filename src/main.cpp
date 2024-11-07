@@ -6,8 +6,14 @@
 
 #include "gui/drawing_helper.hpp"
 
-#define RESOURCES_PATH "G:\\School\\Belegarbeit\\sortiva\\res\\"
+#define RESOURCES_PATH "G:/School/Belegarbeit/sortiva/res/"
 
+#define SETTINGS_PATH "./.config.cfg"
+
+#define NO_GUI
+
+
+#ifndef NO_GUI
 
 int screenWidth = 1280;
 int screenHeight = 720;
@@ -23,13 +29,77 @@ GAME_STATES gameState = SVA_STATE_TITLE;
 void UpdateDrawFrame();			// Update and Draw one frame
 
 #include "gui/themes/dark.h"
-#include <filesystem>
 #include "gui/Views/ViewManager.h"
+#endif
+#include <filesystem>
+
+
+#ifdef NO_GUI
+#include "SortingTester.h"
+#endif
+
+
+#include <random>
+
+std::random_device rd;
+std::mt19937 gen(rd());
+std::uniform_int_distribution<u64> dis(0, 10);
+
+void populate(size_t index, u64& value)
+{
+	value = dis(gen);
+}
+
+
 
 int main(int argc, char** argv)
 {
 	sva_console_init();
+
+#ifdef NO_GUI
+
+	std::cout << "Sortiva - Sorting Algorithm Visualizer" << std::endl;
+	std::cout << "No GUI mode" << std::endl;
 	
+	SortingTester tester;
+	tester.populate( populate );
+
+	tester.load_internal();
+
+	SortingTester::run_result result = tester.run("bubble_sort");
+
+	std::cout << "Time: " << result.timer.seconds << " seconds" << std::endl;
+	std::cout << "Difftime: " << result.timer.difftime << std::endl;
+
+	
+	std::cout << "Count swaps: " << result.count_swaps << std::endl;
+	std::cout << "Count comparisons: " << result.count_comparisons << std::endl;
+	std::cout << "\tCount greater: " << result.count_greater << std::endl;
+	std::cout << "\tCount less: " << result.count_less << std::endl;
+	std::cout << "\tCount equal: " << result.count_equal << std::endl;
+
+	std::cout << "\n\n";
+
+
+	result = tester.run("do_nothing");
+
+	std::cout << "Time: " << result.timer.seconds << " seconds" << std::endl;
+	std::cout << "Difftime: " << result.timer.difftime << std::endl;
+
+	
+	std::cout << "Count swaps: " << result.count_swaps << std::endl;
+	std::cout << "Count comparisons: " << result.count_comparisons << std::endl;
+	std::cout << "\tCount greater: " << result.count_greater << std::endl;
+	std::cout << "\tCount less: " << result.count_less << std::endl;
+	std::cout << "\tCount equal: " << result.count_equal << "\n\n";
+	
+	std::cout << "\nPress any key to exit..." << std::endl;
+	getchar();
+	return 0;
+	
+#endif
+	
+#ifndef NO_GUI
 	if(!DirectoryExists(RESOURCES_PATH))
 	{
 		std::cerr << "Resources folder not found!" << std::endl;
@@ -62,9 +132,11 @@ int main(int argc, char** argv)
 		UpdateDrawFrame();
 	}
 	CloseWindow();
+#endif
 	return 0;
 }
 
+#ifndef NO_GUI
 //----------------------------------------------------------------------------------
 // Render Functions
 //----------------------------------------------------------------------------------
@@ -150,3 +222,5 @@ void RenderGameplayState()
 		
 	}
 }
+
+#endif

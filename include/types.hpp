@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include <cstdint>
 
@@ -84,3 +84,4 @@ typedef TRect<double> rectd;
 typedef TRect<uintmax_t> rectu;
 typedef TRect<intmax_t> recti;
 
+#include "list.hpp"
