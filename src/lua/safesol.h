@@ -37,12 +37,16 @@ public:
 	template<typename ...Args, typename Caller = std::function<sol::protected_function_result(const sol::protected_function&, Args&&...)>>
 	LuaResultType run_on_caller(const std::string& function_name, const Caller& caller, Args&&... args)
 	{
+		std::cout << "Looking for function: " << function_name << std::endl;
+		
 		auto function = lua[function_name];
 		if (!function.valid()) {
 			std::cout << "Error: function " << function_name << " not found" << std::endl;
 			return LuaResultType::RUN_ERROR;
 		}
-	
+
+		std::cout << "Found function, attempting to run" << std::endl;
+		
 		auto result = caller(function, std::forward<Args>(args)...);
 		if (!result.valid()) {
 			sol::error err = result;

@@ -3,6 +3,8 @@
 
 SortingTester::SortingTester() : list(10)
 {
+	std::cout << "Loading lua" << std::endl;
+
 	lua.lua.open_libraries(sol::lib::coroutine, sol::lib::table);
 	lua.lua.new_usertype<SortingTester>("List",
 		"size", &SortingTester::list_size,
@@ -37,6 +39,16 @@ void SortingTester::load_internal()
 
 void SortingTester::populate(const populate_function& f)
 {
+	std::cout << "[List(" << list.size() << ")] [ ";
 	for (size_t i = 0; i < list.size(); i++)
+	{
 		f(i, list[i]);
+		if(i == list.size()-1)
+		{
+			std::cout << list[i] << " ]\n";
+			break;
+		}
+		std::cout << list[i] << ", ";
+	}
+	std::flush(std::cout);
 }

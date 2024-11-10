@@ -79,19 +79,7 @@ int main(int argc, char** argv)
 	std::cout << "\tCount equal: " << result.count_equal << std::endl;
 
 	std::cout << "\n\n";
-
-
-	result = tester.run("do_nothing");
-
-	std::cout << "Time: " << result.timer.seconds << " seconds" << std::endl;
-	std::cout << "Difftime: " << result.timer.difftime << std::endl;
-
 	
-	std::cout << "Count swaps: " << result.count_swaps << std::endl;
-	std::cout << "Count comparisons: " << result.count_comparisons << std::endl;
-	std::cout << "\tCount greater: " << result.count_greater << std::endl;
-	std::cout << "\tCount less: " << result.count_less << std::endl;
-	std::cout << "\tCount equal: " << result.count_equal << "\n\n";
 	
 	std::cout << "\nPress any key to exit..." << std::endl;
 	getchar();

@@ -69,7 +69,7 @@ class SortingTester
 	{
 		if (list.size() <= 1)
 			return true;
-		for (size_t i = 1; i < list.size(); ++i)
+		for (size_t i = 1; i < list.size(); i++)
 		{
 			if (list[i - 1] > list[i])
 				return false;
@@ -139,6 +139,18 @@ public:
 			std::flush(std::cerr);
 			std::terminate();
 		}
+
+		std::cout << "[sorted: List(" << list.size() << ")] [ ";
+		for (size_t i = 0; i < list.size(); i++)
+		{
+			if(i == list.size()-1)
+			{
+				std::cout << list[i] << " ]\n";
+				break;
+			}
+			std::cout << list[i] << ", ";
+		}
+		std::flush(std::cout);
 
 		result.count_comparisons = result.count_equal + result.count_greater + result.count_less;
 
