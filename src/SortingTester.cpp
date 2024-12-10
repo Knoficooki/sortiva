@@ -39,16 +39,9 @@ void SortingTester::load_internal()
 
 void SortingTester::populate(const populate_function& f)
 {
-	std::cout << "[List(" << list.size() << ")] [ ";
 	for (size_t i = 0; i < list.size(); i++)
 	{
 		f(i, list[i]);
-		if(i == list.size()-1)
-		{
-			std::cout << list[i] << " ]\n";
-			break;
-		}
-		std::cout << list[i] << ", ";
 	}
-	std::flush(std::cout);
+	std::cout << list << std::endl;
 }

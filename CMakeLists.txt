@@ -100,7 +100,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(lua)
 
-set(LUA_BUILD_INTERPRETER ON)
+set(LUA_BUILD_INTERPRETER ON CACHE BOOL "Build the Lua interpreter" FORCE)
 
 # ========================================================
 # Helper Function: Set Common Target Properties

@@ -82,8 +82,7 @@ int main(int argc, char** argv)
 	
 	
 	std::cout << "\nPress any key to exit..." << std::endl;
-	getchar();
-	return 0;
+	// getchar();
 	
 #endif
 	

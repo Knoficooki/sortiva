@@ -5,6 +5,9 @@
 #include <mutex>
 #include <utility>
 
+#include <iostream>
+#include <string>
+
 /**
  * @brief A thread-safe dynamic array container class
  * 
@@ -159,6 +162,22 @@ public:
         std::lock_guard lock(mutex_);
         return size_;
     }
+
+	friend std::ostream& operator<<(std::ostream& os, const List& list)
+	{
+		os << "[List] List( type: {" << typeid(T).name() << "}, size: " << list.size_ << ") [ ";
+		for (size_t i = 0; i < list.size_ - 1; i++)
+		{
+			os << list[i] << ", ";
+		}
+    	os << list[list.size_ - 1] << " ]";
+		return os;
+	}
+
+	static std::string type_name()
+	{
+		return "List<" + std::string(typeid(T).name()) + ">";
+	}
 
 private:
     std::unique_ptr<T[]> data_;    ///< Underlying array storage

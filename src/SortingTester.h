@@ -126,31 +126,10 @@ public:
 		if (!is_sorted())
 		{
 			std::cerr << "[ERROR] The algorithm \"" << function_name << "\" did not sort the list" << std::endl;
-			std::cerr << "[List] [ ";
-			for (size_t i = 0; i < list.size(); i++)
-			{
-				if(i == list.size()-1)
-				{
-					std::cerr << list[i] << " ]";
-					continue;
-				}
-				std::cerr << list[i] << ", ";
-			}
+			std::cerr << list << std::endl;
 			std::flush(std::cerr);
 			std::terminate();
 		}
-
-		std::cout << "[sorted: List(" << list.size() << ")] [ ";
-		for (size_t i = 0; i < list.size(); i++)
-		{
-			if(i == list.size()-1)
-			{
-				std::cout << list[i] << " ]\n";
-				break;
-			}
-			std::cout << list[i] << ", ";
-		}
-		std::flush(std::cout);
 
 		result.count_comparisons = result.count_equal + result.count_greater + result.count_less;
 
