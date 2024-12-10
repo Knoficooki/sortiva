@@ -201,7 +201,8 @@ if(${SVA_BUILD_TEST})
 		GIT_REPOSITORY https://github.com/google/googletest.git
 		GIT_TAG release-1.12.1
 	)
-	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)   # Prevent shared CRT issues on Windows
+	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)	# Prevent shared CRT issues on Windows
+	set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)			# Prevents installation of gtest on the system
 	FetchContent_MakeAvailable(googletest)
 	
 	# Enable testing support
@@ -209,10 +210,11 @@ if(${SVA_BUILD_TEST})
 	
 	# --- Create Test Executable
 	set(TEST_TARGET_NAME "${GUI_TARGET_NAME}_test")
+	
+	file(GLOB TEST_SOURCES "tests/*.cpp")
 	add_executable(
 		${TEST_TARGET_NAME}
-		tests/test_main.cpp          # Test entry point
-		tests/test_sorting_functions.cpp
+		${TEST_SOURCES}
 	)
 	
 	target_link_libraries(
@@ -258,6 +260,5 @@ endif()
 put_targets_into_folder(
 	FOLDER "sva"
 	TARGETS
-	${GUI_TARGET_NAME}
 	${TEST_TARGET_NAME}
 )
