@@ -7,7 +7,7 @@ cmake_minimum_required(VERSION 3.22)
 project(sortiva
     LANGUAGES CXX
     VERSION 1.0.0
-)
+    )
 
 # ========================================================
 # Global Settings
@@ -20,8 +20,14 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)        # Generate compile commands (useful
 set(USE_FOLDERS ON)                          # Organize targets into folders (for IDEs)
 set(BUILD_SHARED_LIBS OFF)                   # Build static libraries by default
 
+# =======================================================
+# Get Options
+# =======================================================
+
+set(PULL_RAYLIB ON CACHE BOOL "Allows to use the raylib library")
+
 # ========================================================
-# Helper Functions: 
+# Helper Functions:
 # 	Puts Targets into a Folder
 #	Finds all files in a dir wich are defined file-types
 # ========================================================
@@ -85,10 +91,10 @@ option(SVA_BUILD_TEST ON)					# Option for test to be build as well
 
 # --- Add Sol2 (Lua C++ Binding Library)
 FetchContent_Declare(
-  sol2
-  GIT_REPOSITORY https://github.com/ThePhD/sol2.git
-  GIT_TAG v3.3.0
-)
+    sol2
+    GIT_REPOSITORY https://github.com/ThePhD/sol2.git
+    GIT_TAG v3.3.0
+    )
 FetchContent_MakeAvailable(sol2)
 
 # --- Add Lua
@@ -96,7 +102,7 @@ FetchContent_Declare(
     lua
     GIT_REPOSITORY "https://github.com/marovira/lua"
     GIT_TAG "5.4.4"
-)
+    )
 
 FetchContent_MakeAvailable(lua)
 
@@ -109,11 +115,11 @@ set(LUA_BUILD_INTERPRETER ON CACHE BOOL "Build the Lua interpreter" FORCE)
 # that are shared among all targets.
 
 function(set_common_properties target)
-	target_link_libraries(${target} PRIVATE sol2::sol2)  # Link with Sol2
-	target_compile_definitions(${target} PRIVATE SOL_ALL_SAFETIES_ON=1)
-	target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)  # Include project headers
-	target_sources(${target} PRIVATE ${SVA_COMMON_FILES})  # Include common files
-	target_link_libraries(${target} PRIVATE lua::lua)
+    target_link_libraries(${target} PRIVATE sol2::sol2)  # Link with Sol2
+    target_compile_definitions(${target} PRIVATE SOL_ALL_SAFETIES_ON=1)
+    target_include_directories(${target} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)  # Include project headers
+    target_sources(${target} PRIVATE ${SVA_COMMON_FILES})  # Include common files
+    target_link_libraries(${target} PRIVATE lua::lua)
 endfunction()
 
 # ========================================================
@@ -124,141 +130,117 @@ set(GUI_TARGET_NAME "${PROJECT_NAME}")
 # --- Create GUI Executable
 find_files(SVA_GUI_FILES "./src/" hpp cpp h c hxx cxx)
 add_executable(${GUI_TARGET_NAME}
-	${SVA_GUI_FILES}
-)
+    ${SVA_GUI_FILES}
+    )
 
-# ---------------
-# RAYLIB
-# ---------------
-# Dependencies
-set(RAYLIB_VERSION 5.0)
-find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
+if(${PULL_RAYLIB})
+    # ---------------
+    # RAYLIB
+    # ---------------
+    # Dependencies
+    set(RAYLIB_VERSION 5.0)
+    find_package(raylib ${RAYLIB_VERSION} QUIET) # QUIET or REQUIRED
 
-if (NOT raylib_FOUND) # If there's none, fetch and build raylib
-	include(FetchContent)
-	FetchContent_Declare(
-		raylib
-		DOWNLOAD_EXTRACT_TIMESTAMP OFF
-		URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
-	)
-	FetchContent_GetProperties(raylib)
-	if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
-		set(FETCHCONTENT_QUIET NO)
-		FetchContent_MakeAvailable(raylib)
-		set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
-	endif()
+    if (NOT raylib_FOUND) # If there's none, fetch and build raylib
+        include(FetchContent)
+        FetchContent_Declare(
+            raylib
+            DOWNLOAD_EXTRACT_TIMESTAMP OFF
+            URL https://github.com/raysan5/raylib/archive/refs/tags/${RAYLIB_VERSION}.tar.gz
+            )
+        FetchContent_GetProperties(raylib)
+        if (NOT raylib_POPULATED) # Have we downloaded raylib yet?
+            set(FETCHCONTENT_QUIET NO)
+            FetchContent_MakeAvailable(raylib)
+            set(BUILD_EXAMPLES OFF CACHE BOOL "" FORCE) # don't build the supplied examples
+        endif()
+    endif()
+
+    put_targets_into_folder(FOLDER "raylib" TARGETS raylib uninstall)
+
+    target_link_libraries(${GUI_TARGET_NAME} PRIVATE raylib)
+
+
+    # Checks if OSX and links appropriate frameworks (Only required on MacOS)
+    if (APPLE)
+        target_link_libraries(${PROJECT_NAME} "-framework IOKit")
+        target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
+        target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
+    endif()
 endif()
 
-put_targets_into_folder(FOLDER "raylib" TARGETS raylib uninstall)
-
-target_link_libraries(${GUI_TARGET_NAME} PRIVATE raylib)
-
-# Checks if OSX and links appropriate frameworks (Only required on MacOS)
-if (APPLE)
-	target_link_libraries(${PROJECT_NAME} "-framework IOKit")
-	target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
-	target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
-endif()
-
-# -------------------------------
-# SFML (Not used anymore)
-# -------------------------------
-#
-# --- Add SFML (Simple and Fast Multimedia Library)
-# FetchContent_Declare(SFML
-#   GIT_REPOSITORY https://github.com/SFML/SFML.git
-#   GIT_TAG 2.6.x
-#   GIT_SHALLOW ON
-#   EXCLUDE_FROM_ALL
-#   SYSTEM
-# )
-# FetchContent_MakeAvailable(SFML)
-#
-# target_link_libraries(${GUI_TARGET_NAME} PRIVATE sfml-graphics)  # Link SFML graphics library  
-#
-# --- Special handling for Windows: Copy OpenAL DLL (for sound support)
-# if(WIN32)
-#   add_custom_command(
-#     TARGET ${GUI_TARGET_NAME}
-#     COMMENT "Copy OpenAL DLL"
-#     PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:${GUI_TARGET_NAME}>
-#     VERBATIM
-#   )
-# endif()
-# // SFML is not used anymore
-  
 set_common_properties(${GUI_TARGET_NAME})
 
-	
+
 # ========================================================
 # Test Setup (Only if SVA_BUILD_TEST is ON)
 # ========================================================
 
 if(${SVA_BUILD_TEST})
-	# --- Add Google Test
-	FetchContent_Declare(
-		googletest
-		GIT_REPOSITORY https://github.com/google/googletest.git
-		GIT_TAG release-1.12.1
-	)
-	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)	# Prevent shared CRT issues on Windows
-	set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)			# Prevents installation of gtest on the system
-	FetchContent_MakeAvailable(googletest)
-	
-	# Enable testing support
-	enable_testing()
-	
-	# --- Create Test Executable
-	set(TEST_TARGET_NAME "${GUI_TARGET_NAME}_test")
-	
-	file(GLOB TEST_SOURCES "tests/*.cpp")
-	add_executable(
-		${TEST_TARGET_NAME}
-		${TEST_SOURCES}
-	)
-	
-	target_link_libraries(
-		${TEST_TARGET_NAME}
-		PRIVATE GTest::gtest_main    # Link Google Test framework
-	)
-	set_common_properties(${TEST_TARGET_NAME})
-	
-	# --- Enable Google Test's test discovery feature
-	include(GoogleTest)
-	gtest_discover_tests(${TEST_TARGET_NAME})
-	
-	# put google test targets into a folder
-	put_targets_into_folder(
-		FOLDER "gtest"
-		TARGETS
-		GTest::gtest_main 
-		GTest::gmock_main 
-		GTest::gmock 
-		GTest::gtest
-	)
+    # --- Add Google Test
+    FetchContent_Declare(
+        googletest
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.12.1
+        )
+    set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)	# Prevent shared CRT issues on Windows
+    set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)			# Prevents installation of gtest on the system
+    FetchContent_MakeAvailable(googletest)
+
+    # Enable testing support
+    enable_testing()
+
+    # --- Create Test Executable
+    set(TEST_TARGET_NAME "${GUI_TARGET_NAME}_test")
+
+    file(GLOB TEST_SOURCES "tests/*.cpp")
+    add_executable(
+        ${TEST_TARGET_NAME}
+        ${TEST_SOURCES}
+        )
+
+    target_link_libraries(
+        ${TEST_TARGET_NAME}
+        PRIVATE GTest::gtest_main    # Link Google Test framework
+        )
+    set_common_properties(${TEST_TARGET_NAME})
+
+    # --- Enable Google Test's test discovery feature
+    include(GoogleTest)
+    gtest_discover_tests(${TEST_TARGET_NAME})
+
+    # put google test targets into a folder
+    put_targets_into_folder(
+        FOLDER "gtest"
+        TARGETS
+        GTest::gtest_main
+        GTest::gmock_main
+        GTest::gmock
+        GTest::gtest
+        )
 endif()
 
 # Option to create an includes target
 set(SVA_CREATE_INCLUDES_TARGET ON CACHE BOOL "Create an includes target")
 
 if(${SVA_CREATE_INCLUDES_TARGET})
-	set(INCLUDES_TARGET_NAME "${GUI_TARGET_NAME}_includes")
-	set(INCLUDE_FILES)
-	find_files(
-		INCLUDE_FILES
-		"include/"
-		hpp h hxx
-	)
-	message(STATUS "Include files: ${INCLUDE_FILES}")
-	add_custom_target(${INCLUDES_TARGET_NAME}
-		SOURCES
-		${INCLUDE_FILES}
-	)
-	set_target_properties(${INCLUDES_TARGET_NAME} PROPERTIES FOLDER "sva")
+    set(INCLUDES_TARGET_NAME "${GUI_TARGET_NAME}_includes")
+    set(INCLUDE_FILES)
+    find_files(
+        INCLUDE_FILES
+        "include/"
+        hpp h hxx
+        )
+    message(STATUS "Include files: ${INCLUDE_FILES}")
+    add_custom_target(${INCLUDES_TARGET_NAME}
+        SOURCES
+        ${INCLUDE_FILES}
+        )
+    set_target_properties(${INCLUDES_TARGET_NAME} PROPERTIES FOLDER "sva")
 endif()
 
 put_targets_into_folder(
-	FOLDER "sva"
-	TARGETS
-	${TEST_TARGET_NAME}
+    FOLDER "sva"
+    TARGETS
+    ${TEST_TARGET_NAME}
 )
