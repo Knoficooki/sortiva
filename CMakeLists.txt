@@ -74,12 +74,6 @@ set(FETCHCONTENT_QUIET OFF)					# Display download progress
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)		# Generate compile_commands.json
 
 # ========================================================
-# Options
-# ========================================================
-
-option(SVA_BUILD_TEST ON)					# Option for test to be build as well
-
-# ========================================================
 # External Dependencies
 # ========================================================
 
@@ -101,6 +95,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(lua)
 
 set(LUA_BUILD_INTERPRETER ON CACHE BOOL "Build the Lua interpreter" FORCE)
+set(SOL2_ENABLE_INSTALL OFF CACHE BOOL "" FORCE)
 
 # ========================================================
 # Helper Function: Set Common Target Properties
@@ -159,84 +154,8 @@ if (APPLE)
 	target_link_libraries(${PROJECT_NAME} "-framework Cocoa")
 	target_link_libraries(${PROJECT_NAME} "-framework OpenGL")
 endif()
-
-# -------------------------------
-# SFML (Not used anymore)
-# -------------------------------
-#
-# --- Add SFML (Simple and Fast Multimedia Library)
-# FetchContent_Declare(SFML
-#   GIT_REPOSITORY https://github.com/SFML/SFML.git
-#   GIT_TAG 2.6.x
-#   GIT_SHALLOW ON
-#   EXCLUDE_FROM_ALL
-#   SYSTEM
-# )
-# FetchContent_MakeAvailable(SFML)
-#
-# target_link_libraries(${GUI_TARGET_NAME} PRIVATE sfml-graphics)  # Link SFML graphics library  
-#
-# --- Special handling for Windows: Copy OpenAL DLL (for sound support)
-# if(WIN32)
-#   add_custom_command(
-#     TARGET ${GUI_TARGET_NAME}
-#     COMMENT "Copy OpenAL DLL"
-#     PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy ${SFML_SOURCE_DIR}/extlibs/bin/$<IF:$<EQUAL:${CMAKE_SIZEOF_VOID_P},8>,x64,x86>/openal32.dll $<TARGET_FILE_DIR:${GUI_TARGET_NAME}>
-#     VERBATIM
-#   )
-# endif()
-# // SFML is not used anymore
   
 set_common_properties(${GUI_TARGET_NAME})
-
-	
-# ========================================================
-# Test Setup (Only if SVA_BUILD_TEST is ON)
-# ========================================================
-
-if(${SVA_BUILD_TEST})
-	# --- Add Google Test
-	FetchContent_Declare(
-		googletest
-		GIT_REPOSITORY https://github.com/google/googletest.git
-		GIT_TAG release-1.12.1
-	)
-	set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)	# Prevent shared CRT issues on Windows
-	set(INSTALL_GTEST OFF CACHE BOOL "" FORCE)			# Prevents installation of gtest on the system
-	FetchContent_MakeAvailable(googletest)
-	
-	# Enable testing support
-	enable_testing()
-	
-	# --- Create Test Executable
-	set(TEST_TARGET_NAME "${GUI_TARGET_NAME}_test")
-	
-	file(GLOB TEST_SOURCES "tests/*.cpp")
-	add_executable(
-		${TEST_TARGET_NAME}
-		${TEST_SOURCES}
-	)
-	
-	target_link_libraries(
-		${TEST_TARGET_NAME}
-		PRIVATE GTest::gtest_main    # Link Google Test framework
-	)
-	set_common_properties(${TEST_TARGET_NAME})
-	
-	# --- Enable Google Test's test discovery feature
-	include(GoogleTest)
-	gtest_discover_tests(${TEST_TARGET_NAME})
-	
-	# put google test targets into a folder
-	put_targets_into_folder(
-		FOLDER "gtest"
-		TARGETS
-		GTest::gtest_main 
-		GTest::gmock_main 
-		GTest::gmock 
-		GTest::gtest
-	)
-endif()
 
 # Option to create an includes target
 set(SVA_CREATE_INCLUDES_TARGET ON CACHE BOOL "Create an includes target")
