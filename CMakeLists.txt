@@ -18,7 +18,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)          # Enforce C++20 standard
 set(CMAKE_CXX_EXTENSIONS OFF)                # Disable compiler-specific extensions
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)        # Generate compile commands (useful for IDEs)
 set(USE_FOLDERS ON)                          # Organize targets into folders (for IDEs)
-set(BUILD_SHARED_LIBS OFF)                   # Build static libraries by default
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "" FORCE)                   # Build static libraries by default
 
 # ========================================================
 # Helper Functions: 
