@@ -91,7 +91,6 @@ FetchContent_Declare(
     GIT_REPOSITORY "https://github.com/marovira/lua"
     GIT_TAG "5.4.4"
 )
-
 FetchContent_MakeAvailable(lua)
 
 set(LUA_BUILD_INTERPRETER ON CACHE BOOL "Build the Lua interpreter" FORCE)
@@ -144,8 +143,6 @@ if (NOT raylib_FOUND) # If there's none, fetch and build raylib
 	endif()
 endif()
 
-put_targets_into_folder(FOLDER "raylib" TARGETS raylib uninstall)
-
 target_link_libraries(${GUI_TARGET_NAME} PRIVATE raylib)
 
 # Checks if OSX and links appropriate frameworks (Only required on MacOS)
@@ -157,11 +154,50 @@ endif()
   
 set_common_properties(${GUI_TARGET_NAME})
 
+# =============
+# spdlog
+# =============
+set(SPDLOG_NO_EXCEPTIONS ON CACHE BOOL "" FORCE)
+
+FetchContent_Declare(
+	spdlog
+	GIT_REPOSITORY https://github.com/gabime/spdlog.git
+	GIT_TAG v1.15.0
+)
+FetchContent_MakeAvailable(spdlog)
+target_link_libraries(${GUI_TARGET_NAME} PRIVATE spdlog)
+
+put_targets_into_folder(
+	FOLDER "ThirdParty/spdlog" 
+	TARGETS 
+		spdlog
+)
+
+put_targets_into_folder(
+	FOLDER "ThirdParty/raylib" 
+	TARGETS 
+		raylib uninstall
+)
+
+put_targets_into_folder(
+	FOLDER "ThirdParty/lua" 
+	TARGETS 
+		lua lua_lib
+)
+
+put_targets_into_folder(
+	FOLDER "ThirdParty/glfw" 
+	TARGETS 
+		glfw update_mappings
+)
+
+
+
 # Option to create an includes target
 set(SVA_CREATE_INCLUDES_TARGET ON CACHE BOOL "Create an includes target")
 
 if(${SVA_CREATE_INCLUDES_TARGET})
-	set(INCLUDES_TARGET_NAME "${GUI_TARGET_NAME}_includes")
+	set(INCLUDES_TARGET_NAME "includes")
 	set(INCLUDE_FILES)
 	find_files(
 		INCLUDE_FILES
@@ -173,11 +209,4 @@ if(${SVA_CREATE_INCLUDES_TARGET})
 		SOURCES
 		${INCLUDE_FILES}
 	)
-	set_target_properties(${INCLUDES_TARGET_NAME} PROPERTIES FOLDER "sva")
 endif()
-
-put_targets_into_folder(
-	FOLDER "sva"
-	TARGETS
-	${TEST_TARGET_NAME}
-)

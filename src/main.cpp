@@ -15,14 +15,15 @@
 
 #include <iostream>
 
-// sva logger
-#include <logger.hpp>
 
 /* raylib includes */
 #include <raylib.h>
+#include <sol/debug.hpp>
 
 #include "gui/ComponentStack.hpp"
 #include "gui/CoreComponents.hpp"
+
+#include <spdlog/spdlog.h>
 
 constexpr int window_width = 800;
 constexpr int window_height = 650;
@@ -39,14 +40,12 @@ enum class logerr_level
 
 int main(void)
 {
-	std::cout << "Darling, I'm Home!\n";
-
-	sva::Logging logerr = sva::Logging(std::cerr);
-	logerr.levelName(logerr_level::Debug) = "Debug";
-	logerr.levelName(logerr_level::Window) = "Window";
-	logerr.levelName(logerr_level::SVA) = "SVA";
-
-	logerr(logerr_level::Debug);
+#ifdef _DEBUG
+	spdlog::set_level(spdlog::level::debug);
+	spdlog::set_pattern("\n\t%^%v%$\n");
+#endif
+	spdlog::debug("Darling, I'm Home");
+	spdlog::set_pattern("[%T %z] [%^%l%$] [thread %t] %v");
 
 	/* Window and rendering */
 
@@ -54,7 +53,7 @@ int main(void)
 
 	if (!IsWindowReady())
 	{
-		logerr(logerr_level::Window).logln("Window could not be created...");
+		spdlog::critical("Window could not be created...");
 		return 0;
 	}
 
@@ -63,9 +62,11 @@ int main(void)
 
 	SetWindowFocused();
 
+	spdlog::debug("Window created successfully.");
 
-	bool m_Running = true;
-	ComponentStack::s_WndRunning = &m_Running;
+
+	bool is_running = true;
+	ComponentStack::s_WndRunning = &is_running;
 
 	ComponentStack::s_WndWidth = GetRenderWidth();
 	ComponentStack::s_WndHeight = GetRenderHeight();
@@ -76,11 +77,11 @@ int main(void)
 
 	// always on top...
 	SafeClosePopup safe_close_popup;
-	safe_close_popup.attach(&m_Running);
+	safe_close_popup.attach(&is_running);
 	safe_close_popup.wndrsize(ComponentStack::s_WndWidth, ComponentStack::s_WndHeight);
 
 
-	while (m_Running) {
+	while (is_running) {
 
 
 		if (IsWindowResized())
@@ -113,7 +114,7 @@ int main(void)
 	switch (run_result)
 	{
 	case 2:
-		logerr(logerr_level::SVA).logln("Program exiting abnormally.");
+		spdlog::warn("Program exiting abnormally.");
 		break;
 	default:
 		break;
